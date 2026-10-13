@@ -182,7 +182,7 @@ private fun OnboardingTutorial(onFinish: () -> Unit) {
                 "FiiLDAをホームアプリに設定すると、ホームボタンでいつでもこの画面に戻れます。",
                 "Set FiiLDA as your Home app so the Home button always brings you back here.",
             ),
-            illustration = { SetHomeButton() },
+            illustration = { SetHomeButton(onFinish = onFinish) },
         ),
     )
     val pagerState = rememberPagerState { pages.size }
@@ -441,7 +441,7 @@ private fun MiniThemes() {
 
 /** Asks Android to make FiiLDA the Home app, or shows that it already is. */
 @Composable
-private fun SetHomeButton() {
+private fun SetHomeButton(onFinish: () -> Unit) {
     val context = LocalContext.current
     val palette = LocalLauncherPalette.current
     val roleManager = remember(context) { context.getSystemService(RoleManager::class.java) }
@@ -465,6 +465,8 @@ private fun SetHomeButton() {
                         roleManager?.takeIf { it.isRoleAvailable(RoleManager.ROLE_HOME) }
                             ?.createRequestRoleIntent(RoleManager.ROLE_HOME)
                     }.getOrNull() ?: Intent(Settings.ACTION_HOME_SETTINGS)
+                    // Changing the Home app can recreate the Activity before a result arrives.
+                    onFinish()
                     runCatching { launcher.launch(request) }
                 }
                 .padding(horizontal = 20.dp, vertical = 12.dp),
